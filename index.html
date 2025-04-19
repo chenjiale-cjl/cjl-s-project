@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexiMaster | 词汇大师</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+            --error: #f72585;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--light);
+            background-attachment: fixed;
+            background-size: cover;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            overflow: hidden;
+            width: 100%;
+            max-width: 600px;
+            padding: 40px;
+            position: relative;
+            z-index: 1;
+            transition: var(--transition);
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            z-index: -1;
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 700;
+            background: linear-gradient(to right, #fff, #c9d6ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(to right, var(--accent), var(--success));
+            margin: 10px auto;
+            border-radius: 2px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin: 10px 0;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(67, 97, 238, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn i {
+            margin-right: 10px;
+        }
+
+        #game {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .word-display {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin: 30px 0;
+            text-align: center;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 1.1rem;
+            color: white;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            backdrop-filter: blur(5px);
+            text-align: center;
+        }
+
+        .option-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .option-btn.correct {
+            background: linear-gradient(45deg, #4cc9f0, #4895ef);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 4px 15px rgba(76, 201, 240, 0.4);
+        }
+
+        .option-btn.wrong {
+            background: linear-gradient(45deg, #f72585, #b5179e);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 4px 15px rgba(247, 37, 133, 0.4);
+        }
+
+        .result-feedback {
+            font-size: 1.3rem;
+            font-weight: 600;
+            text-align: center;
+            margin: 20px 0;
+            min-height: 30px;
+        }
+
+        .correct-feedback {
+            color: var(--success);
+            animation: bounce 0.5s;
+        }
+
+        .wrong-feedback {
+            color: var(--error);
+            animation: shake 0.5s;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .score-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            font-size: 1.2rem;
+        }
+
+        .progress-container {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin: 20px 0;
+            height: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, var(--accent), var(--success));
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .game-end {
+            text-align: center;
+            animation: zoomIn 0.5s;
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* 错题本样式 */
+        .wrong-answers-container {
+            margin-top: 30px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .wrong-answer-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--error);
+        }
+        
+        .wrong-answer-item p {
+            margin: 5px 0;
+        }
+        
+        .wrong-word {
+            font-weight: bold;
+            color: var(--accent);
+        }
+        
+        .user-answer {
+            color: var(--error);
+        }
+        
+        .correct-answer {
+            color: var(--success);
+        }
+
+        /* 烟花效果 */
+        .firework {
+            position: fixed;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.8);
+            z-index: 10;
+            animation: launch 1s ease-out forwards;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: explode 1.5s ease-out forwards;
+            opacity: 0;
+        }
+        
+        @keyframes launch {
+            0% { transform: translate(var(--start-x), var(--start-y)); opacity: 1; }
+            100% { transform: translate(var(--end-x), var(--end-y)); opacity: 1; }
+        }
+        
+        @keyframes explode {
+            0% { 
+                transform: translate(0, 0); 
+                opacity: 1; 
+                width: 6px;
+                height: 6px;
+            }
+            100% { 
+                transform: translate(var(--tx), var(--ty)); 
+                opacity: 0; 
+                width: 3px;
+                height: 3px;
+            }
+        }
+        
+        /* 五彩纸屑效果 */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            animation: fall 5s linear infinite;
+            z-index: -1;
+        }
+        
+        .confetti.square {
+            border-radius: 0;
+        }
+        
+        .confetti.triangle {
+            width: 0;
+            height: 0;
+            background-color: transparent;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 10px solid currentColor;
+        }
+        
+        .confetti.star {
+            clip-path: polygon(
+                50% 0%, 
+                61% 35%, 
+                98% 35%, 
+                68% 57%, 
+                79% 91%, 
+                50% 70%, 
+                21% 91%, 
+                32% 57%, 
+                2% 35%, 
+                39% 35%
+            );
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 600px) {
+            .glass-card {
+                padding: 30px 20px;
+                border-radius: 15px;
+            }
+            
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .word-display {
+                font-size: 2.2rem;
+                margin: 20px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-card">
+        <div id="start-screen">
+            <h1>LexiMaster<br><span style="font-size: 1.2rem; display: block; margin-top: 5px;">词汇大师</span></h1>
+            <p style="text-align: center; margin-bottom: 30px; opacity: 0.9;">测试你的词汇量，挑战10个单词！</p>
+            <button id="start-btn" class="btn">
+                <i class="fas fa-play"></i> 开始挑战
+            </button>
+        </div>
+        
+        <div id="game">
+            <div class="progress-container">
+                <div class="progress-bar" id="progress"></div>
+            </div>
+            
+            <h2 class="word-display" id="word"></h2>
+            
+            <div class="options-grid" id="options"></div>
+            
+            <div class="result-feedback" id="result"></div>
+            
+            <div class="score-display">
+                <span>得分: <strong id="score">0</strong>/10</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let currentQuestion = 0;
+        const totalQuestions = 10;
+        let correctAnswer = '';
+
+        document.getElementById('start-btn').addEventListener('click', startGame);
+
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('game').style.display = 'block';
+            updateProgress();
+            fetchQuestion();
+        }
+
+        function fetchQuestion() {
+            fetch('/get_question')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('word').textContent = data.word;
+                    const optionsDiv = document.getElementById('options');
+                    optionsDiv.innerHTML = '';
+                    correctAnswer = data.correct_answer;
+                    
+                    data.options.forEach(option => {
+                        const button = document.createElement('button');
+                        button.className = 'option-btn';
+                        button.textContent = option;
+                        button.addEventListener('click', () => handleAnswer(option, button));
+                        optionsDiv.appendChild(button);
+                    });
+                    
+                    document.getElementById('result').textContent = '';
+                });
+        }
+
+        function handleAnswer(selectedAnswer, clickedButton) {
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                if (btn.textContent === correctAnswer) {
+                    btn.classList.add('correct');
+                } else if (btn === clickedButton) {
+                    btn.classList.add('wrong');
+                }
+            });
+
+            const isCorrect = selectedAnswer === correctAnswer;
+            const resultElement = document.getElementById('result');
+            
+            if (isCorrect) {
+                score++;
+                resultElement.textContent = '✓ 正确！';
+                resultElement.className = 'result-feedback correct-feedback';
+                createFirework(
+                    clickedButton.getBoundingClientRect().left + clickedButton.offsetWidth/2,
+                    clickedButton.getBoundingClientRect().top,
+                    `hsl(${Math.random() * 360}, 100%, 50%)`,
+                    30
+                );
+            } else {
+                resultElement.textContent = '✗ 错误！';
+                resultElement.className = 'result-feedback wrong-feedback';
+                
+                // 记录错题
+                fetch('/check_answer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        answer: selectedAnswer,
+                        correct_answer: correctAnswer,
+                        word: document.getElementById('word').textContent
+                    })
+                });
+            }
+
+            document.getElementById('score').textContent = score;
+            currentQuestion++;
+            updateProgress();
+
+            setTimeout(() => {
+                if (currentQuestion < totalQuestions) {
+                    fetchQuestion();
+                } else {
+                    endGame();
+                }
+            }, 1500);
+        }
+
+        function updateProgress() {
+            const progress = (currentQuestion / totalQuestions) * 100;
+            document.getElementById('progress').style.width = `${progress}%`;
+        }
+
+        function createFirework(x, y, color, particleCount) {
+            // 创建烟花发射点
+            const firework = document.createElement('div');
+            firework.className = 'firework';
+            firework.style.left = `${x}px`;
+            firework.style.top = `${y + window.scrollY}px`;
+            firework.style.backgroundColor = color;
+            document.body.appendChild(firework);
+            
+            // 发射动画结束后创建爆炸效果
+            setTimeout(() => {
+                firework.remove();
+                createExplosion(x, y + window.scrollY, color, particleCount);
+                createConfetti(15); // 添加一些五彩纸屑作为补充
+            }, 1000);
+        }
+        
+        function createExplosion(x, y, color, particleCount) {
+            const colors = [color];
+            if (Math.random() > 0.7) {
+                // 30%几率产生多色烟花
+                colors.push(
+                    `hsl(${Math.random() * 360}, 100%, 50%)`,
+                    `hsl(${Math.random() * 360}, 100%, 50%)`
+                );
+            }
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                
+                // 随机选择颜色
+                const particleColor = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.backgroundColor = particleColor;
+                
+                // 随机爆炸方向和距离
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 50 + Math.random() * 150;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+                
+                particle.style.setProperty('--tx', `${tx}px`);
+                particle.style.setProperty('--ty', `${ty}px`);
+                
+                // 随机大小和动画延迟
+                const size = 3 + Math.random() * 5;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.animationDelay = `${Math.random() * 0.2}s`;
+                
+                document.body.appendChild(particle);
+                
+                // 动画结束后移除粒子
+                setTimeout(() => {
+                    particle.remove();
+                }, 1500);
+            }
+        }
+        
+        function createConfetti(count = 20) {
+            const types = ['', 'square', 'triangle', 'star'];
+            const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff'];
+            
+            for (let i = 0; i < count; i++) {
+                const confetti = document.createElement('div');
+                const type = types[Math.floor(Math.random() * types.length)];
+                confetti.className = `confetti ${type}`;
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.color = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
+                confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                const size = Math.random() * 10 + 5;
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size}px`;
+                
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }
+        }
+
+        function createSurroundingFireworks(centerX, centerY, count, distance, particleCount) {
+            for (let i = 0; i < count; i++) {
+                // 从屏幕四周发射
+                let startX, startY;
+                const side = Math.floor(Math.random() * 4); // 0:上, 1:右, 2:下, 3:左
+                
+                switch(side) {
+                    case 0: // 上
+                        startX = Math.random() * window.innerWidth;
+                        startY = -50;
+                        break;
+                    case 1: // 右
+                        startX = window.innerWidth + 50;
+                        startY = Math.random() * window.innerHeight;
+                        break;
+                    case 2: // 下
+                        startX = Math.random() * window.innerWidth;
+                        startY = window.innerHeight + 50;
+                        break;
+                    case 3: // 左
+                        startX = -50;
+                        startY = Math.random() * window.innerHeight;
+                        break;
+                }
+                
+                const color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                const firework = document.createElement('div');
+                firework.className = 'firework';
+                firework.style.left = `${startX}px`;
+                firework.style.top = `${startY}px`;
+                firework.style.backgroundColor = color;
+                firework.style.setProperty('--start-x', '0px');
+                firework.style.setProperty('--start-y', '0px');
+                firework.style.setProperty('--end-x', `${centerX - startX}px`);
+                firework.style.setProperty('--end-y', `${centerY - startY}px`);
+                
+                document.body.appendChild(firework);
+                
+                // 发射动画结束后创建爆炸效果
+                setTimeout(() => {
+                    firework.remove();
+                    createExplosion(centerX, centerY, color, particleCount);
+                }, 1000);
+            }
+        }
+
+        function endGame() {
+            fetch('/get_wrong_answers')
+                .then(response => response.json())
+                .then(wrongAnswers => {
+                    const gameDiv = document.getElementById('game');
+                    const centerX = window.innerWidth / 2;
+                    const centerY = window.innerHeight / 2;
+                    
+                    let wrongAnswersHTML = '';
+                    
+                    if (wrongAnswers.length > 0) {
+                        wrongAnswersHTML = `
+                            <div class="wrong-answers-container">
+                                <h3 style="margin-bottom: 15px;">错题本 (${wrongAnswers.length}题)</h3>
+                                ${wrongAnswers.map(item => `
+                                    <div class="wrong-answer-item">
+                                        <p><span class="wrong-word">${item.word}</span></p>
+                                        <p>你的答案: <span class="user-answer">${item.user_answer}</span></p>
+                                        <p>正确答案: <span class="correct-answer">${item.correct_answer}</span></p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+                    
+                    gameDiv.innerHTML = `
+                        <div class="game-end">
+                            <h2 style="font-size: 2rem; margin-bottom: 20px;">挑战完成！</h2>
+                            <p style="font-size: 1.5rem; margin-bottom: 30px;">最终得分: <strong>${score}/${totalQuestions}</strong></p>
+                            ${wrongAnswersHTML}
+                            <button onclick="location.reload()" class="btn" style="margin-top: 20px;">
+                                <i class="fas fa-redo"></i> 再试一次
+                            </button>
+                        </div>
+                    `;
+                    
+                    // 根据得分触发不同规模的烟花效果
+                    if (score >= 8) {
+                        // 8分以上触发从四周向中心的大型烟花表演
+                        document.querySelector('.game-end h2').style.color = 'var(--success)';
+                        
+                        if (score === 10) {
+                            document.querySelector('.game-end h2').textContent = '完美！全部正确！';
+                            // 全对时触发三次大型烟花表演
+                            for (let i = 0; i < 3; i++) {
+                                setTimeout(() => {
+                                    createSurroundingFireworks(centerX, centerY, 12, 100, 80);
+                                }, i * 1000);
+                            }
+                        } else {
+                            document.querySelector('.game-end h2').textContent = '太棒了！几乎全对！';
+                            // 接近全对时触发两次大型烟花表演
+                            for (let i = 0; i < 2; i++) {
+                                setTimeout(() => {
+                                    createSurroundingFireworks(centerX, centerY, 8, 100, 60);
+                                }, i * 800);
+                            }
+                        }
+                    }
+                });
+        }
+    </script>
+</body>
+</html>
